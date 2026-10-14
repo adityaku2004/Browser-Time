@@ -262,6 +262,12 @@ class TimeTrackingService {
     this.notifyListeners();
   }
 
+  public toggleTracking(): boolean {
+    this.isTrackingActive = !this.isTrackingActive;
+    this.notifyListeners();
+    return this.isTrackingActive;
+  }
+
   public excludeCurrentWebsite() {
     this.toggleExcludeDomain(this.currentDomain);
   }
