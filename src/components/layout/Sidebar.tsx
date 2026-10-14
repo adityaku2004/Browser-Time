@@ -8,7 +8,6 @@ import {
   UserCheck,
   History as HistoryIcon,
   TrendingUp,
-  Users,
   HelpCircle,
   Settings,
   ChevronLeft,
@@ -35,7 +34,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const service = useTimeTracking();
   const status = service.getTrackingStatus();
-  const [showTeamModal, setShowTeamModal] = useState(false);
 
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -118,19 +116,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </NavLink>
             );
           })}
-
-          {/* Collaborative Team Mode Button */}
-          <button
-            type="button"
-            onClick={() => setShowTeamModal(true)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-[#23262F]/80 transition-all ${
-              collapsed ? 'justify-center' : ''
-            }`}
-            title="Team & Focus Room"
-          >
-            <Users className="w-4.5 h-4.5 shrink-0 stroke-[2.2]" />
-            {!collapsed && <span>Team Room</span>}
-          </button>
         </nav>
 
         {/* Compact Extension Popup Preview Launcher */}
@@ -207,53 +192,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
       </div>
-
-      {/* Team Modal */}
-      {showTeamModal && (
-        <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setShowTeamModal(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-3xl bg-[#1A1C23] border border-[#2B2F3A] p-6 shadow-2xl relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#4EECD3]" />
-                <h4 className="text-sm font-bold text-white">Team Focus Room</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowTeamModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-            <p className="text-xs text-slate-300 py-4">
-              Collaborative sprint room is active. 4 teammates are currently in deep work mode.
-            </p>
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center justify-between text-xs p-2 rounded-xl bg-[#23262F]">
-                <span className="text-slate-200">Sarah M. (Lead Design)</span>
-                <span className="text-[#4EECD3] font-mono">Figma · 2h 10m</span>
-              </div>
-              <div className="flex items-center justify-between text-xs p-2 rounded-xl bg-[#23262F]">
-                <span className="text-slate-200">Dave K. (Engineering)</span>
-                <span className="text-[#38BDF8] font-mono">VS Code · 3h 40m</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowTeamModal(false)}
-              className="w-full py-2 rounded-xl bg-[#4EECD3] text-[#0c2420] font-bold text-xs"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </aside>
   );
 };
