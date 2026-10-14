@@ -164,33 +164,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Settings className="w-5 h-5" />
           </NavLink>
         </div>
-
-        {/* User Avatar with Profile Card */}
-        <div
-          className={`flex items-center gap-3 p-2 rounded-2xl bg-[#1A1C23] border border-[#2B2F3A] ${
-            collapsed ? 'justify-center' : ''
-          }`}
-        >
-          <div className="relative shrink-0">
-            <img
-              src="/src/assets/images/user_avatar_profile_1791727381738.jpg"
-              alt="User Profile"
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-[#4EECD3]/40"
-            />
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#4EECD3] ring-2 ring-[#16181D]" />
-          </div>
-
-          {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-white truncate">
-                Aditya Udai
-              </div>
-              <div className="text-[10px] text-slate-400 truncate">
-                Pro Member · Sync Active
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </aside>
   );
