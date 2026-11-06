@@ -5,7 +5,6 @@ import { Clock, CheckCircle2, AlertOctagon, Activity, ChevronDown, ChevronUp, La
 import { FocusControlBar } from '../components/dashboard/FocusControlBar';
 import { ExecutiveDateHeader, ExecutiveRange } from '../components/dashboard/ExecutiveDateHeader';
 import { ExecutiveKpiCards } from '../components/dashboard/ExecutiveKpiCards';
-import { ExecutiveDailySummary } from '../components/dashboard/ExecutiveDailySummary';
 import { ExecutiveTimeline } from '../components/dashboard/ExecutiveTimeline';
 import { ExecutiveBreakdownGrid } from '../components/dashboard/ExecutiveBreakdownGrid';
 
@@ -52,30 +51,13 @@ export const Dashboard: React.FC = () => {
         onRangeChange={setSelectedRange}
       />
 
-      {/* 3. Row 1: KPI Cards (Work Hours, Percent of Target in Mint, Focus Percent) + Daily Summary Donut */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
-        {/* Left: 3 KPI Metrics (Span 7 cols on large screens) */}
-        <div className="lg:col-span-7 flex flex-col justify-between">
-          <ExecutiveKpiCards
-            workHoursFormatted="7hr 30min"
-            targetHoursFormatted="7hr 30min"
-            targetPercent={90}
-            focusPercent={80}
-          />
-        </div>
-
-        {/* Right: Daily Summary - Today Donut Card (Span 5 cols) */}
-        <div className="lg:col-span-5">
-          <ExecutiveDailySummary
-            focusPercent={50}
-            breaksPercent={30}
-            meetingPercent={20}
-            focusDuration="5h 10 min"
-            meetingDuration="1h 15 min"
-            breaksDuration="1h 5 min"
-          />
-        </div>
-      </div>
+      {/* 3. Row 1: KPI Cards (Work Hours, Percent of Target in Mint, Focus Percent) */}
+      <ExecutiveKpiCards
+        workHoursFormatted="7hr 30min"
+        targetHoursFormatted="7hr 30min"
+        targetPercent={90}
+        focusPercent={80}
+      />
 
       {/* 4. Row 2: Visual 6am–6pm Continuous Timeline */}
       <ExecutiveTimeline />
