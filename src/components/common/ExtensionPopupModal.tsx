@@ -108,7 +108,9 @@ export const ExtensionPopupModal: React.FC<ExtensionPopupModalProps> = ({
                 <div className="text-lg font-bold text-white font-mono mt-0.5">
                   {formatDuration(status.todayTotalSeconds)}
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1">24 websites visited</div>
+                <div className="text-[10px] text-slate-400 mt-1">
+                  {service.getWebsites().length > 0 ? `${service.getWebsites().length} websites tracked` : '0 websites tracked'}
+                </div>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
@@ -121,7 +123,7 @@ export const ExtensionPopupModal: React.FC<ExtensionPopupModalProps> = ({
                   <span className="text-[10px] text-slate-400 font-normal">/ 100</span>
                 </div>
                 <div className="text-[10px] text-emerald-400 font-medium mt-1">
-                  Good focus
+                  {status.todayScore >= 75 ? 'Good focus' : status.todayScore >= 50 ? 'Moderate focus' : status.todayScore > 0 ? 'Needs attention' : 'Awaiting data'}
                 </div>
               </div>
             </div>

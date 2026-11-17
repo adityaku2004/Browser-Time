@@ -143,26 +143,16 @@ export const ExecutiveDateHeader: React.FC<ExecutiveDateHeaderProps> = ({
                 }}
                 className="w-full px-2.5 py-1.5 rounded-xl bg-[#23262F] text-slate-200 border border-slate-700/60 focus:outline-hidden focus:border-[#38E1C2]"
               />
-              <div className="flex justify-between mt-2 pt-2 border-t border-slate-800 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDateChange(new Date(2025, 4, 22)); // May 22, 2025 to match screenshot
-                    setShowDatePicker(false);
-                  }}
-                  className="text-[#38E1C2] hover:underline"
-                >
-                  Reset to May 22, 2025
-                </button>
+              <div className="flex justify-end mt-2 pt-2 border-t border-slate-800 text-[11px]">
                 <button
                   type="button"
                   onClick={() => {
                     onDateChange(new Date());
                     setShowDatePicker(false);
                   }}
-                  className="text-slate-400 hover:text-white"
+                  className="text-[#38E1C2] hover:underline"
                 >
-                  Today
+                  Reset to Today
                 </button>
               </div>
             </div>

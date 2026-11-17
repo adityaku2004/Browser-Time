@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { MoreHorizontal, Clock, Calendar, CheckCircle2, Video, Coffee } from 'lucide-react';
+import { MoreHorizontal, Clock } from 'lucide-react';
+import { useTimeTracking } from '../../hooks/useTimeTracking';
+import { formatDuration } from '../../utils/formatters';
 
 interface TimelineBlock {
   id: string;
@@ -9,10 +11,12 @@ interface TimelineBlock {
   category: 'focus' | 'meeting' | 'break' | 'idle';
   color: string;
   app: string;
-  notes?: string;
+  durationSeconds: number;
 }
 
 export const ExecutiveTimeline: React.FC = () => {
+  const service = useTimeTracking();
+  const timelineItems = service.getTimeline();
   const [activeSession, setActiveSession] = useState<TimelineBlock | null>(null);
   const [hoveredSession, setHoveredSession] = useState<TimelineBlock | null>(null);
 
@@ -21,69 +25,49 @@ export const ExecutiveTimeline: React.FC = () => {
   const endDayHour = 18;
   const totalHours = endDayHour - startDayHour; // 12
 
-  // Sessions accurately matching the blocks in the screenshot
-  const blocks: TimelineBlock[] = [
-    {
-      id: 'b1',
-      startHour: 8.0,
-      endHour: 10.7,
-      title: 'Deep Focus - UI & System Architecture',
-      category: 'focus',
-      color: '#38BDF8', // Cyan / Sky blue
-      app: 'Figma & VS Code',
-      notes: 'Focused wireframing and design token alignment',
-    },
-    {
-      id: 'b2',
-      startHour: 10.7,
-      endHour: 11.2,
-      title: 'Weekly Product Alignment Sync',
-      category: 'meeting',
-      color: '#3B82F6', // Royal blue
-      app: 'Google Meet',
-      notes: 'Review sprint deliverables with team',
-    },
-    {
-      id: 'b3',
-      startHour: 11.2,
-      endHour: 13.0,
-      title: 'Design Exploration & Prototyping',
-      category: 'focus',
-      color: '#4EECD3', // Mint
-      app: 'Figma',
-      notes: 'Created interactive prototype flows',
-    },
-    {
-      id: 'b4',
-      startHour: 14.0,
-      endHour: 16.25,
-      title: 'Component Engineering & Verification',
-      category: 'focus',
-      color: '#38BDF8', // Sky blue
-      app: 'GitHub & Chrome',
-      notes: 'Implemented state service and unit verification',
-    },
-    {
-      id: 'b5',
-      startHour: 16.25,
-      endHour: 16.85,
-      title: 'Client Catchup & Feedback Review',
-      category: 'meeting',
-      color: '#3B82F6', // Royal blue
-      app: 'Zoom',
-      notes: 'Walkthrough analytics dashboard milestone',
-    },
-    {
-      id: 'b6',
-      startHour: 16.85,
-      endHour: 17.5,
-      title: 'Sprint Wrap-up & Slack Comms',
-      category: 'focus',
-      color: '#4EECD3', // Mint
-      app: 'Slack & Notion',
-      notes: 'Organized daily recap and documented tickets',
-    },
-  ];
+  // Convert real timeline items into visual timeline blocks between 6am and 6pm
+  const blocks: TimelineBlock[] = React.useMemo(() => {
+    return timelineItems.map((item) => {
+      // Parse hour from item.time string (e.g. "09:30 AM", "10:15 AM")
+      let startH = 9;
+      try {
+        const parts = item.time.split(/[:\s]/);
+        if (parts.length >= 2) {
+          let h = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10) || 0;
+          const isPM = item.time.toUpperCase().includes('PM');
+          if (isPM && h < 12) h += 12;
+          if (!isPM && h === 12) h = 0;
+          startH = h + m / 60;
+        }
+      } catch {
+        startH = 9;
+      }
+
+      // Clamp between 6am and 6pm
+      const durationH = Math.max(0.1, item.duration / 3600);
+      const clampedStart = Math.max(startDayHour, Math.min(endDayHour - 0.2, startH));
+      const clampedEnd = Math.min(endDayHour, clampedStart + durationH);
+
+      const color =
+        item.category === 'productive'
+          ? '#38BDF8'
+          : item.category === 'distracting'
+          ? '#F43F5E'
+          : '#4EECD3';
+
+      return {
+        id: item.id,
+        startHour: clampedStart,
+        endHour: clampedEnd,
+        title: item.title || item.name,
+        category: item.category === 'productive' ? 'focus' : 'idle',
+        color,
+        app: item.domain,
+        durationSeconds: item.duration,
+      };
+    });
+  }, [timelineItems]);
 
   const ticks = [
     '6 am', '7 am', '8 am', '9 am', '10 am', '11 am', '12 pm',
@@ -94,7 +78,7 @@ export const ExecutiveTimeline: React.FC = () => {
     const whole = Math.floor(hourNum);
     const mins = Math.round((hourNum - whole) * 60);
     const period = whole >= 12 ? 'pm' : 'am';
-    const displayHour = whole > 12 ? whole - 12 : whole;
+    const displayHour = whole > 12 ? whole - 12 : whole === 0 ? 12 : whole;
     return `${displayHour}:${mins.toString().padStart(2, '0')} ${period}`;
   };
 
@@ -110,19 +94,12 @@ export const ExecutiveTimeline: React.FC = () => {
             Continuous activity stream (6:00 AM – 6:00 PM)
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => setActiveSession(blocks[0])}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#252830] transition-colors"
-        >
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
       </div>
 
       {/* Visual Timeline Bar Container */}
       <div className="relative pt-2 pb-1">
-        {/* Timeline Bar Track (matches the recessed dark bar in screenshot) */}
-        <div className="relative h-16 sm:h-20 w-full rounded-xl bg-[#131418] border border-[#2B2F3A] overflow-hidden">
+        {/* Timeline Bar Track */}
+        <div className="relative h-16 sm:h-20 w-full rounded-xl bg-[#131418] border border-[#2B2F3A] overflow-hidden flex items-center justify-center">
           {/* Subtle hour grid lines */}
           <div className="absolute inset-0 flex justify-between pointer-events-none opacity-20">
             {ticks.map((_, i) => (
@@ -130,41 +107,34 @@ export const ExecutiveTimeline: React.FC = () => {
             ))}
           </div>
 
-          {/* Idle / Break background slots */}
-          {/* 1:00pm - 2:00pm Lunch break block */}
-          <div
-            className="absolute top-0 bottom-0 bg-[#1E2026]/80 flex items-center justify-center pointer-events-none"
-            style={{
-              left: `${((13.0 - startDayHour) / totalHours) * 100}%`,
-              width: `${(1.0 / totalHours) * 100}%`,
-            }}
-          >
-            <span className="text-[10px] text-slate-500 font-medium hidden md:inline">Lunch Break</span>
-          </div>
+          {blocks.length === 0 ? (
+            <div className="text-slate-500 text-xs font-medium z-10 px-4 text-center">
+              No activity recorded today yet. Browsing activity between 6:00 AM and 6:00 PM will appear here.
+            </div>
+          ) : (
+            blocks.map((block) => {
+              const leftPct = ((block.startHour - startDayHour) / totalHours) * 100;
+              const widthPct = Math.max(1.5, ((block.endHour - block.startHour) / totalHours) * 100);
+              const isHovered = hoveredSession?.id === block.id;
 
-          {/* Activity Session Blocks */}
-          {blocks.map((block) => {
-            const leftPct = ((block.startHour - startDayHour) / totalHours) * 100;
-            const widthPct = ((block.endHour - block.startHour) / totalHours) * 100;
-            const isHovered = hoveredSession?.id === block.id;
-
-            return (
-              <div
-                key={block.id}
-                onClick={() => setActiveSession(block)}
-                onMouseEnter={() => setHoveredSession(block)}
-                onMouseLeave={() => setHoveredSession(null)}
-                style={{
-                  left: `${leftPct}%`,
-                  width: `${widthPct}%`,
-                  backgroundColor: block.color,
-                }}
-                className={`absolute top-1 bottom-1 rounded-sm cursor-pointer transition-all duration-150 ${
-                  isHovered ? 'brightness-110 shadow-lg scale-y-105 z-20' : 'opacity-95 z-10'
-                }`}
-              />
-            );
-          })}
+              return (
+                <div
+                  key={block.id}
+                  onClick={() => setActiveSession(block)}
+                  onMouseEnter={() => setHoveredSession(block)}
+                  onMouseLeave={() => setHoveredSession(null)}
+                  style={{
+                    left: `${leftPct}%`,
+                    width: `${widthPct}%`,
+                    backgroundColor: block.color,
+                  }}
+                  className={`absolute top-1 bottom-1 rounded-sm cursor-pointer transition-all duration-150 ${
+                    isHovered ? 'brightness-110 shadow-lg scale-y-105 z-20' : 'opacity-95 z-10'
+                  }`}
+                />
+              );
+            })
+          )}
         </div>
 
         {/* Hover Tooltip Float */}
@@ -201,7 +171,7 @@ export const ExecutiveTimeline: React.FC = () => {
         </div>
       </div>
 
-      {/* Session Details Modal when clicking any block */}
+      {/* Session Details Modal */}
       {activeSession && (
         <div
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
@@ -240,27 +210,13 @@ export const ExecutiveTimeline: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Duration:</span>
                 <span className="font-mono text-white font-medium">
-                  {Math.round((activeSession.endHour - activeSession.startHour) * 60)} minutes
+                  {formatDuration(activeSession.durationSeconds)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">Category:</span>
-                <span className="capitalize font-semibold text-[#38E1C2]">
-                  {activeSession.category}
-                </span>
+                <span className="text-slate-400">Domain:</span>
+                <span className="text-slate-200 font-mono">{activeSession.app}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">Applications:</span>
-                <span className="text-slate-200">{activeSession.app}</span>
-              </div>
-              {activeSession.notes && (
-                <div className="pt-2 border-t border-slate-800/80">
-                  <span className="text-slate-400 block mb-1">Notes:</span>
-                  <p className="text-slate-200 bg-[#131418] p-2.5 rounded-xl border border-slate-800">
-                    {activeSession.notes}
-                  </p>
-                </div>
-              )}
             </div>
 
             <div className="flex justify-end pt-2">

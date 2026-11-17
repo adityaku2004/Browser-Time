@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   AlertOctagon,
   Activity,
-  TrendingDown,
   Calendar,
 } from 'lucide-react';
 
@@ -18,12 +17,19 @@ export const History: React.FC = () => {
   const history = service.getDailyHistory();
   const [timeframe, setTimeframe] = useState<'day' | 'week' | 'month' | 'year'>('week');
 
-  // Compute aggregated stats
-  const totalBrowsing = 138240; // ~38h 24m
-  const productiveBrowsing = 89280; // ~24h 48m
-  const distractionBrowsing = 32400; // ~9h 00m
-  const avgDaily = 19748; // ~5h 29m
-  const avgScore = 76;
+  // Compute aggregated stats dynamically from actual recorded history
+  const activeDays = history.filter((d) => d.totalTime > 0);
+  const totalBrowsing = history.reduce((acc, d) => acc + d.totalTime, 0);
+  const productiveBrowsing = history.reduce((acc, d) => acc + d.productiveTime, 0);
+  const distractionBrowsing = history.reduce((acc, d) => acc + d.distractingTime, 0);
+  const avgDaily = activeDays.length > 0 ? Math.round(totalBrowsing / activeDays.length) : 0;
+  const avgScore =
+    activeDays.length > 0
+      ? Math.round(activeDays.reduce((acc, d) => acc + d.productivityScore, 0) / activeDays.length)
+      : 0;
+
+  const prodRatio = totalBrowsing > 0 ? Math.round((productiveBrowsing / totalBrowsing) * 100) : 0;
+  const distRatio = totalBrowsing > 0 ? Math.round((distractionBrowsing / totalBrowsing) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -73,9 +79,8 @@ export const History: React.FC = () => {
           <div className="text-2xl font-extrabold text-white font-mono mt-1">
             {formatDuration(totalBrowsing)}
           </div>
-          <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-            <TrendingDown className="w-3 h-3" />
-            <span>-9.2% vs last {timeframe}</span>
+          <div className="text-[11px] text-slate-400 mt-1">
+            {activeDays.length} active {activeDays.length === 1 ? 'day' : 'days'}
           </div>
         </div>
 
@@ -87,7 +92,7 @@ export const History: React.FC = () => {
           <div className="text-2xl font-extrabold text-emerald-400 font-mono mt-1">
             {formatDuration(productiveBrowsing)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">64.5% ratio</div>
+          <div className="text-[11px] text-slate-400 mt-1">{prodRatio}% ratio</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 shadow-md">
@@ -98,7 +103,7 @@ export const History: React.FC = () => {
           <div className="text-2xl font-extrabold text-rose-400 font-mono mt-1">
             {formatDuration(distractionBrowsing)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">23.4% ratio</div>
+          <div className="text-[11px] text-slate-400 mt-1">{distRatio}% ratio</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 shadow-md">
@@ -109,7 +114,9 @@ export const History: React.FC = () => {
           <div className="text-2xl font-extrabold text-white font-mono mt-1">
             {avgScore} <span className="text-xs text-slate-400 font-normal">/ 100</span>
           </div>
-          <div className="text-[11px] text-emerald-400 mt-1">+3 pts overall</div>
+          <div className="text-[11px] text-emerald-400 mt-1">
+            {avgScore >= 70 ? 'Optimal focus' : avgScore > 0 ? 'Moderate focus' : 'No data yet'}
+          </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 shadow-md">

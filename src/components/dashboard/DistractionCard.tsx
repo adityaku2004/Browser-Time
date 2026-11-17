@@ -1,7 +1,7 @@
 import React from 'react';
 import { WebsiteActivity } from '../../types';
 import { formatDuration } from '../../utils/formatters';
-import { AlertOctagon, TrendingDown, Flame } from 'lucide-react';
+import { AlertOctagon, TrendingDown, Flame, CheckCircle2 } from 'lucide-react';
 
 interface DistractionCardProps {
   distractingSeconds: number;
@@ -14,13 +14,13 @@ export const DistractionCard: React.FC<DistractionCardProps> = ({
   totalSeconds,
   websites,
 }) => {
-  const percentage = totalSeconds > 0 ? Math.round((distractingSeconds / totalSeconds) * 100) : 24;
+  const percentage = totalSeconds > 0 ? Math.round((distractingSeconds / totalSeconds) * 100) : 0;
 
   const distractingWebsites = websites
-    .filter((w) => w.category === 'distracting' && !w.excluded)
+    .filter((w) => w.category === 'distracting' && !w.excluded && w.timeSpent > 0)
     .sort((a, b) => b.timeSpent - a.timeSpent);
 
-  const biggestDistraction = distractingWebsites[0]?.name || 'YouTube';
+  const biggestDistraction = distractingWebsites[0]?.name || 'None';
   const topList = distractingWebsites.slice(0, 4);
 
   return (
@@ -62,52 +62,61 @@ export const DistractionCard: React.FC<DistractionCardProps> = ({
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             Top Distracting Destinations
           </div>
-          {topList.map((site) => {
-            const sitePct = distractingSeconds > 0 ? (site.timeSpent / distractingSeconds) * 100 : 0;
-            return (
-              <div key={site.id} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={`https://www.google.com/s2/favicons?domain=${site.domain}&sz=64`}
-                      alt={site.name}
-                      className="w-3.5 h-3.5 rounded-xs"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                    <span className="font-medium text-slate-200">{site.name}</span>
+          {topList.length === 0 ? (
+            <div className="py-6 text-center text-slate-400 text-xs bg-slate-950/30 rounded-xl border border-slate-800/50">
+              No distracting websites visited today.
+            </div>
+          ) : (
+            topList.map((site) => {
+              const sitePct = distractingSeconds > 0 ? (site.timeSpent / distractingSeconds) * 100 : 0;
+              return (
+                <div key={site.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${site.domain}&sz=64`}
+                        alt={site.name}
+                        className="w-3.5 h-3.5 rounded-xs"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                      <span className="font-medium text-slate-200">{site.name}</span>
+                    </div>
+                    <span className="font-mono font-bold text-rose-300">
+                      {formatDuration(site.timeSpent)}
+                    </span>
                   </div>
-                  <span className="font-mono font-bold text-rose-300">
-                    {formatDuration(site.timeSpent)}
-                  </span>
+                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-rose-500/90 transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(5, sitePct))}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-rose-500/90 transition-all duration-500"
-                    style={{ width: `${Math.min(100, Math.max(5, sitePct))}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
       {/* Smart Distraction Insights */}
       <div className="space-y-2 pt-3 border-t border-slate-800/70">
-        <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-2.5 text-xs">
-          <Flame className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <span className="text-slate-300">
-            Your biggest distraction today was <strong className="text-white">{biggestDistraction}</strong>.
-          </span>
-        </div>
-        <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-2.5 text-xs">
-          <TrendingDown className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-          <span className="text-slate-300">
-            You spent <strong className="text-emerald-400">37 minutes less</strong> on distracting sites than yesterday.
-          </span>
-        </div>
+        {distractingSeconds > 0 ? (
+          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-2.5 text-xs">
+            <Flame className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <span className="text-slate-300">
+              Your primary distraction today is <strong className="text-white">{biggestDistraction}</strong> ({formatDuration(distractingWebsites[0]?.timeSpent || 0)}).
+            </span>
+          </div>
+        ) : (
+          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-2.5 text-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <span className="text-slate-300">
+              Zero distraction time recorded today. Excellent focus!
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

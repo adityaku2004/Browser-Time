@@ -15,20 +15,21 @@ export const ProductivityDonut: React.FC<ProductivityDonutProps> = ({
   neutralSeconds,
   totalSeconds,
 }) => {
-  const safeTotal = totalSeconds || (productiveSeconds + distractingSeconds + neutralSeconds) || 1;
+  const hasData = totalSeconds > 0;
+  const prodPct = hasData ? Math.round((productiveSeconds / totalSeconds) * 100) : 0;
+  const distPct = hasData ? Math.round((distractingSeconds / totalSeconds) * 100) : 0;
+  const neutPct = hasData ? Math.max(0, 100 - prodPct - distPct) : 0;
 
-  const prodPct = Math.round((productiveSeconds / safeTotal) * 100);
-  const distPct = Math.round((distractingSeconds / safeTotal) * 100);
-  const neutPct = Math.max(0, 100 - prodPct - distPct);
-
-  const chartData = [
-    { name: 'Productive', value: productiveSeconds, percent: prodPct, color: '#10b981' },
-    { name: 'Neutral', value: neutralSeconds, percent: neutPct, color: '#f59e0b' },
-    { name: 'Distracting', value: distractingSeconds, percent: distPct, color: '#f43f5e' },
-  ];
+  const chartData = hasData
+    ? [
+        { name: 'Productive', value: productiveSeconds, percent: prodPct, color: '#10b981' },
+        { name: 'Neutral', value: neutralSeconds, percent: neutPct, color: '#f59e0b' },
+        { name: 'Distracting', value: distractingSeconds, percent: distPct, color: '#f43f5e' },
+      ].filter((d) => d.value > 0)
+    : [{ name: 'No Activity', value: 1, percent: 0, color: '#1e293b' }];
 
   const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+    if (hasData && active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="bg-slate-950/95 border border-slate-700/80 rounded-xl p-2.5 shadow-2xl backdrop-blur-md">
@@ -67,7 +68,7 @@ export const ProductivityDonut: React.FC<ProductivityDonutProps> = ({
               cy="50%"
               innerRadius={62}
               outerRadius={84}
-              paddingAngle={4}
+              paddingAngle={hasData ? 4 : 0}
               dataKey="value"
               stroke="none"
               animationDuration={800}
@@ -81,7 +82,7 @@ export const ProductivityDonut: React.FC<ProductivityDonutProps> = ({
 
         {/* Donut Center Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-xl font-bold tracking-tight text-white">
+          <span className="text-xl font-bold tracking-tight text-white font-mono">
             {formatDuration(totalSeconds)}
           </span>
           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">

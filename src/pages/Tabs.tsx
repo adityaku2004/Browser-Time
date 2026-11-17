@@ -89,9 +89,19 @@ export const Tabs: React.FC = () => {
 
       {/* Tabs List */}
       <div className="space-y-3">
-        {filteredTabs.map((tab) => (
-          <TabCard key={tab.id} tab={tab} />
-        ))}
+        {filteredTabs.length === 0 ? (
+          <div className="p-8 rounded-2xl bg-slate-900/60 border border-slate-800 text-center">
+            <Layers className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+            <div className="text-sm font-semibold text-white">No active tabs currently tracked</div>
+            <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+              When loaded as an extension in Chrome or Firefox, Browser Time automatically detects and monitors open browser tabs in real time.
+            </p>
+          </div>
+        ) : (
+          filteredTabs.map((tab) => (
+            <TabCard key={tab.id} tab={tab} />
+          ))
+        )}
       </div>
     </div>
   );

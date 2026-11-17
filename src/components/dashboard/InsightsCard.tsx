@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProductivityInsight } from '../../types';
-import { Zap, Sun, Code, Repeat, Flame, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Zap, Sun, Code, Repeat, Flame, Sparkles } from 'lucide-react';
 
 interface InsightsCardProps {
   insights: ProductivityInsight[];
@@ -37,43 +37,36 @@ export const InsightsCard: React.FC<InsightsCardProps> = ({ insights }) => {
           </p>
         </div>
         <span className="text-xs font-medium text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700">
-          5 Insights
+          {insights.length} {insights.length === 1 ? 'Insight' : 'Insights'}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {insights.map((insight) => (
-          <div
-            key={insight.id}
-            className="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-slate-700 transition-all duration-200 flex items-start gap-3"
-          >
-            <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700/60 flex items-center justify-center shrink-0 mt-0.5">
-              {getIcon(insight.icon)}
-            </div>
-            <div>
-              <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>{insight.title}</span>
-              </div>
-              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                {insight.description}
-              </p>
-            </div>
-          </div>
-        ))}
-
-        {/* Actionable recommendation card */}
-        <div className="p-3.5 rounded-xl bg-gradient-to-br from-sky-950/30 to-slate-900/60 border border-sky-800/40 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-sky-900/50 border border-sky-700/60 flex items-center justify-center shrink-0 mt-0.5">
-            <CheckCircle2 className="w-4 h-4 text-sky-300" />
-          </div>
-          <div>
-            <div className="text-xs font-bold text-sky-200">Recommended Action</div>
-            <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-              Block YouTube during 9:00 AM - 12:00 PM to protect your 52m morning peak focus block.
-            </p>
-          </div>
+      {insights.length === 0 ? (
+        <div className="py-8 text-center text-slate-400 text-xs bg-slate-950/30 rounded-xl border border-slate-800/50 p-6">
+          No automated insights generated yet. As you browse websites, smart usage patterns and focus summaries will appear here.
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {insights.map((insight) => (
+            <div
+              key={insight.id}
+              className="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-slate-700 transition-all duration-200 flex items-start gap-3"
+            >
+              <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700/60 flex items-center justify-center shrink-0 mt-0.5">
+                {getIcon(insight.icon)}
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>{insight.title}</span>
+                </div>
+                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                  {insight.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

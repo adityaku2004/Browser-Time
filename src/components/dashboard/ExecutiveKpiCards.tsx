@@ -1,17 +1,17 @@
 import React from 'react';
 
 interface ExecutiveKpiCardsProps {
-  workHoursFormatted: string; // e.g. "7hr 30min"
-  targetHoursFormatted: string; // e.g. "7hr 30min"
-  targetPercent: number; // e.g. 90
-  focusPercent: number; // e.g. 80
+  workHoursFormatted?: string;
+  targetHoursFormatted?: string;
+  targetPercent?: number;
+  focusPercent?: number;
 }
 
 export const ExecutiveKpiCards: React.FC<ExecutiveKpiCardsProps> = ({
-  workHoursFormatted = '7hr 30min',
-  targetHoursFormatted = '7hr 30min',
-  targetPercent = 90,
-  focusPercent = 80,
+  workHoursFormatted = '0m',
+  targetHoursFormatted = '8hr 00min',
+  targetPercent = 0,
+  focusPercent = 0,
 }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5 p-5 lg:p-6 rounded-3xl bg-[#1A1C23] border border-[#2B2F3A] shadow-lg">
@@ -21,7 +21,7 @@ export const ExecutiveKpiCards: React.FC<ExecutiveKpiCardsProps> = ({
           Work Hours
         </span>
         <div className="text-3xl sm:text-4xl lg:text-[40px] font-bold text-white tracking-tight flex items-baseline gap-1.5 font-mono">
-          <span>{workHoursFormatted.split(' ')[0]}</span>
+          <span>{workHoursFormatted.split(' ')[0] || '0m'}</span>
           <span className="text-2xl sm:text-3xl font-semibold text-slate-200">
             {workHoursFormatted.split(' ')[1] || ''}
           </span>

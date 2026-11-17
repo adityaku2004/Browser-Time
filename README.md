@@ -70,35 +70,37 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📦 Compiling the Extension
 
-The build system creates an optimized, self-contained extension bundle in the `dist/` directory with relative asset paths and Manifest V3 compatibility.
+Running the build command automatically produces **both** production extensions in dedicated directories:
+* **`chrome-dist/`** — Configured for Google Chrome, Brave, Microsoft Edge, Opera, and Arc (Manifest V3 Service Worker).
+* **`firefox-dist/`** — Configured for Mozilla Firefox and Firefox Developer Edition (Gecko ID + background scripts).
 
-### 1. Build for Google Chrome & Chromium Browsers
+### Compile Both Distributions in One Step
 ```bash
-npm run build:chrome
-# (or simply: npm run build)
+npm run build
 ```
-This compiles the application and configures `dist/manifest.json` for Chrome (with `service_worker: "background.js"`).
+This single command runs `vite build` followed by the multi-browser packager. It outputs:
+* `dist/` (Base web build)
+* `chrome-dist/` (Manifest V3 Chrome bundle)
+* `firefox-dist/` (Manifest V3 Firefox bundle)
 
-### 2. Build for Mozilla Firefox
-```bash
-npm run build:firefox
-```
-This compiles the application and applies `dist/manifest.firefox.json` (including Gecko ID `browsertime@productivity.extension` and Firefox background script declaration).
+You can also run `npm run build:chrome` or `npm run build:firefox` which execute the same unified compilation pipeline.
 
-### Verification
-Once built, your `dist/` folder will have the following structure:
+### Verification of Generated Folders
+After running `npm run build`, your project directory will contain:
 ```
-dist/
-├── assets/                  # Bundled JS and CSS chunks (relative paths ./assets/...)
-├── icons/                   # Extension icons (16px, 48px, 128px PNGs + SVG)
-│   ├── icon-16.png
-│   ├── icon-48.png
-│   ├── icon-128.png
-│   └── icon.svg
-├── background.js            # Background service worker / script
-├── index.html               # Main dashboard & popup entrypoint
-├── manifest.json            # Active extension manifest
-└── manifest.firefox.json    # Firefox-tailored manifest configuration
+├── chrome-dist/                 # Load unpacked into chrome://extensions
+│   ├── assets/                  # Bundled JS and CSS chunks
+│   ├── icons/                   # Extension icons (16px, 48px, 128px PNGs + SVG)
+│   ├── background.js            # Background service worker
+│   ├── index.html               # Main dashboard & popup entrypoint
+│   └── manifest.json            # Chrome MV3 manifest (service_worker: "background.js")
+│
+└── firefox-dist/                # Load unpacked into about:debugging
+    ├── assets/                  # Bundled JS and CSS chunks
+    ├── icons/                   # Extension icons
+    ├── background.js            # Background script
+    ├── index.html               # Main dashboard & popup entrypoint
+    └── manifest.json            # Firefox MV3 manifest (with Gecko ID)
 ```
 
 ---
@@ -119,7 +121,7 @@ Follow these steps to load and test Browser Time as an unpacked extension in Goo
 
 ### Step 3: Load Unpacked Extension
 1. Click the **"Load unpacked"** button in the top-left toolbar.
-2. In the file picker dialog, navigate to your project directory and select the **`dist`** folder.
+2. In the file picker dialog, navigate to your project directory and select the **`chrome-dist`** folder.
 3. Click **Select Folder** (or **Open**).
 
 ### Step 4: Verify and Pin
@@ -137,7 +139,7 @@ Follow these steps to load and test Browser Time as an unpacked extension in Goo
 ### Step 6: Debugging & Hot Reloading
 * To inspect the extension popup: Right-click inside the popup window and select **Inspect**.
 * To inspect the background worker: On `chrome://extensions`, click **"service worker"** under the Browser Time card to open dedicated DevTools.
-* To reload after making code changes: Run `npm run build:chrome`, then click the circular **Reload** (⟳) icon on the Browser Time card in `chrome://extensions`.
+* To reload after making code changes: Run `npm run build`, then click the circular **Reload** (⟳) icon on the Browser Time card in `chrome://extensions`.
 
 ---
 
@@ -147,11 +149,11 @@ Firefox supports loading temporary add-ons directly or via the Mozilla `web-ext`
 
 ### Method A: Temporary Add-on via `about:debugging` (Recommended)
 
-#### Step 1: Compile for Firefox
+#### Step 1: Compile the Extension
 ```bash
-npm run build:firefox
+npm run build
 ```
-*(This ensures Firefox-compatible Gecko IDs and background settings are placed in `dist/manifest.json`)*.
+*(This automatically prepares `firefox-dist/` with the Firefox-compatible Gecko ID and background settings in `manifest.json`)*.
 
 #### Step 2: Open Firefox Debugging Page
 1. In Firefox's address bar, type:
@@ -162,8 +164,8 @@ npm run build:firefox
 
 #### Step 3: Load Temporary Add-on
 1. Click the **"Load Temporary Add-on..."** button.
-2. Navigate to your project's **`dist/`** folder.
-3. Select either **`dist/manifest.json`** or **`dist/index.html`** and click **Open**.
+2. Navigate to your project's **`firefox-dist/`** folder.
+3. Select either **`firefox-dist/manifest.json`** or **`firefox-dist/index.html`** and click **Open**.
 
 #### Step 4: Test in Firefox
 1. The **Browser Time** extension icon will appear on Firefox's toolbar.
@@ -171,7 +173,7 @@ npm run build:firefox
 3. Click **"Open Full Dashboard"** or visit `moz-extension://<EXTENSION_UUID>/index.html` to test the full analytics suite.
 
 #### Step 5: Reloading in Firefox
-* When you rebuild (`npm run build:firefox`), click the **Reload** button under the extension's entry on `about:debugging#/runtime/this-firefox`.
+* When you rebuild (`npm run build`), click the **Reload** button under the extension's entry on `about:debugging#/runtime/this-firefox`.
 * Click **Inspect** to open Firefox's WebExtension Developer Tools (console, network, and storage inspection).
 
 ---
@@ -181,11 +183,11 @@ npm run build:firefox
 You can also run Firefox with the extension preloaded using Mozilla's official CLI tool without installing it globally:
 
 ```bash
-# 1. Build the Firefox bundle
-npm run build:firefox
+# 1. Build the extensions
+npm run build
 
-# 2. Launch Firefox with web-ext
-npx web-ext run --source-dir dist/
+# 2. Launch Firefox with web-ext targeting firefox-dist
+npx web-ext run --source-dir firefox-dist/
 ```
 `web-ext` launches a dedicated, sandboxed Firefox instance with the extension installed, featuring automatic reloads whenever files in `dist/` change.
 
@@ -351,11 +353,13 @@ When connecting real browsing activity:
 ## ❓ Troubleshooting & FAQ
 
 ### 1. `Manifest file is missing or unreadable`
-* Ensure you ran `npm run build` or `npm run build:firefox` prior to loading the extension.
-* When clicking **"Load unpacked"** in Chrome, select the **`dist`** directory, **not** the project root.
+* Ensure you ran `npm run build` prior to loading the extension.
+* In Chrome, click **"Load unpacked"** and select the **`chrome-dist`** directory (not `dist` or the project root).
+* In Firefox `about:debugging`, select `firefox-dist/manifest.json`.
 
 ### 2. Assets (CSS or JS) fail to load (404 error)
 * Browser extensions do not serve files from the root domain `/`. The `vite.config.ts` in this project is pre-configured with `base: './'` so all script and stylesheet references are relative (`./assets/...`).
+* Both `chrome-dist/` and `firefox-dist/` have relative asset references and load immediately.
 * If you customize `vite.config.ts`, ensure `base: './'` remains in place.
 
 ### 3. Navigation causes 404 in the extension

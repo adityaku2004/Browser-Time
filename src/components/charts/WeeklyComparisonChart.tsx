@@ -9,17 +9,35 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
+import { useTimeTracking } from '../../hooks/useTimeTracking';
 
 export const WeeklyComparisonChart: React.FC = () => {
-  const comparisonData = [
-    { day: 'Mon', thisWeek: 6.2, lastWeek: 6.8 },
-    { day: 'Tue', thisWeek: 7.1, lastWeek: 6.5 },
-    { day: 'Wed', thisWeek: 5.8, lastWeek: 6.9 },
-    { day: 'Thu', thisWeek: 6.7, lastWeek: 7.2 },
-    { day: 'Fri', thisWeek: 5.4, lastWeek: 6.1 },
-    { day: 'Sat', thisWeek: 3.8, lastWeek: 4.5 },
-    { day: 'Sun', thisWeek: 3.4, lastWeek: 4.2 },
-  ];
+  const service = useTimeTracking();
+  const history = service.getDailyHistory();
+
+  // Compute this week vs previous week from actual recorded history
+  const comparisonData = React.useMemo(() => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    // Get last 14 days from history
+    const len = history.length;
+    const thisWeekSlice = history.slice(Math.max(0, len - 7), len);
+    const lastWeekSlice = history.slice(Math.max(0, len - 14), Math.max(0, len - 7));
+
+    return days.map((dayName, idx) => {
+      const thisDay = thisWeekSlice[idx];
+      const lastDay = lastWeekSlice[idx];
+
+      const thisWeekHours = thisDay ? Number((thisDay.totalTime / 3600).toFixed(1)) : 0;
+      const lastWeekHours = lastDay ? Number((lastDay.totalTime / 3600).toFixed(1)) : 0;
+
+      return {
+        day: dayName,
+        thisWeek: thisWeekHours,
+        lastWeek: lastWeekHours,
+      };
+    });
+  }, [history]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -59,36 +77,36 @@ export const WeeklyComparisonChart: React.FC = () => {
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-xs bg-sky-500" />
-            <span className="text-slate-300">This Week (38h 24m)</span>
+            <span className="text-slate-300">This Week</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-xs bg-slate-700" />
-            <span className="text-slate-400">Last Week (42h 18m)</span>
+            <span className="text-slate-400">Last Week</span>
           </div>
         </div>
       </div>
 
-      <div className="h-64 w-full">
+      <div className="w-full h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={comparisonData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
             <XAxis
               dataKey="day"
               stroke="#64748b"
+              fontSize={11}
               tickLine={false}
-              axisLine={{ stroke: '#1e293b' }}
-              tick={{ fontSize: 11 }}
+              axisLine={{ stroke: '#334155' }}
             />
             <YAxis
               stroke="#64748b"
+              fontSize={11}
               tickLine={false}
-              axisLine={{ stroke: '#1e293b' }}
-              tick={{ fontSize: 11 }}
-              unit="h"
+              axisLine={false}
+              tickFormatter={(v) => `${v}h`}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="thisWeek" name="This Week" fill="#38bdf8" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="lastWeek" name="Last Week" fill="#334155" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="thisWeek" fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="lastWeek" fill="#334155" radius={[4, 4, 0, 0]} maxBarSize={28} />
           </BarChart>
         </ResponsiveContainer>
       </div>

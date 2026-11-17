@@ -35,11 +35,16 @@ export const TopWebsitesCard: React.FC<TopWebsitesCardProps> = ({
           Websites ranked by active time spent today
         </p>
 
-        <div className="space-y-3.5">
-          {websites.slice(0, 5).map((site, index) => {
-            const config = getCategoryConfig(site.category);
-            const percentage = totalTime > 0 ? Math.round((site.timeSpent / totalTime) * 100) : 0;
-            const barWidth = Math.min(100, Math.max(5, (site.timeSpent / maxTime) * 100));
+        {websites.length === 0 ? (
+          <div className="py-8 text-center text-slate-400 text-xs bg-slate-950/30 rounded-xl border border-slate-800/50 p-4">
+            No website activity recorded today yet.
+          </div>
+        ) : (
+          <div className="space-y-3.5">
+            {websites.slice(0, 5).map((site, index) => {
+              const config = getCategoryConfig(site.category);
+              const percentage = totalTime > 0 ? Math.round((site.timeSpent / totalTime) * 100) : 0;
+              const barWidth = Math.min(100, Math.max(5, (site.timeSpent / maxTime) * 100));
 
             return (
               <div
@@ -112,7 +117,8 @@ export const TopWebsitesCard: React.FC<TopWebsitesCardProps> = ({
             );
           })}
         </div>
-      </div>
+      )}
     </div>
+  </div>
   );
 };

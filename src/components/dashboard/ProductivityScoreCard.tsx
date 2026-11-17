@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScoreFactor } from '../../types';
-import { TrendingUp, Award, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Award, ShieldAlert, CheckCircle2, Activity } from 'lucide-react';
 
 interface ProductivityScoreCardProps {
   score: number;
@@ -12,9 +12,9 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   factors,
 }) => {
   // Determine score status and colors
-  let statusText = 'Good Productivity';
-  let statusColor = 'text-emerald-400';
-  let strokeColor = '#10b981';
+  let statusText = 'Ready';
+  let statusColor = 'text-slate-400';
+  let strokeColor = '#334155';
 
   if (score >= 85) {
     statusText = 'Excellent Productivity';
@@ -28,7 +28,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
     statusText = 'Moderate Focus';
     statusColor = 'text-amber-400';
     strokeColor = '#f59e0b';
-  } else {
+  } else if (score > 0) {
     statusText = 'High Distraction';
     statusColor = 'text-rose-400';
     strokeColor = '#f43f5e';
@@ -37,7 +37,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   // SVG Gauge calculations
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
-  // Let's make an arc (75% circle gauge)
+  // 75% circle gauge
   const arcLength = circumference * 0.75;
   const strokeDashoffset = arcLength - (arcLength * Math.min(100, Math.max(0, score))) / 100;
 
@@ -101,10 +101,6 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
         <div className={`text-sm font-bold tracking-tight ${statusColor} -mt-2`}>
           {statusText}
         </div>
-        <div className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 font-medium">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-          <span>+6 points vs yesterday</span>
-        </div>
       </div>
 
       {/* Factors list */}
@@ -112,34 +108,44 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
         <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
           Score Breakdown Factors
         </div>
-        {factors.map((factor, idx) => (
-          <div
-            key={idx}
-            className="flex items-center justify-between text-xs py-1 border-b border-slate-800/40 last:border-none"
-          >
-            <div className="flex items-center gap-2">
-              {factor.type === 'positive' ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              ) : (
-                <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-              )}
-              <span className="text-slate-300 font-medium">{factor.name}</span>
-            </div>
-            <span
-              className={`font-mono font-bold ${
-                factor.type === 'positive' ? 'text-emerald-400' : 'text-rose-400'
-              }`}
-            >
-              {factor.points > 0 ? `+${factor.points}` : factor.points}
-            </span>
+        {factors.length === 0 ? (
+          <div className="py-4 text-center text-slate-400 text-xs bg-slate-950/30 rounded-xl border border-slate-800/50">
+            No score factors calculated yet. Browse websites to generate factors.
           </div>
-        ))}
+        ) : (
+          factors.map((factor, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between text-xs py-1 border-b border-slate-800/40 last:border-none"
+            >
+              <div className="flex items-center gap-2">
+                {factor.type === 'positive' ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                )}
+                <span className="text-slate-300 font-medium">{factor.name}</span>
+              </div>
+              <span
+                className={`font-mono font-bold ${
+                  factor.type === 'positive' ? 'text-emerald-400' : 'text-rose-400'
+                }`}
+              >
+                {factor.points > 0 ? `+${factor.points}` : factor.points}
+              </span>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Benchmark Footer */}
-      <div className="mt-4 p-2.5 rounded-xl bg-sky-950/40 border border-sky-800/40 text-xs text-sky-200/90 flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0 animate-pulse" />
-        <span>Your score is higher than <strong>72%</strong> of your previous days</span>
+      <div className="mt-4 p-2.5 rounded-xl bg-slate-950/40 border border-slate-800 text-xs text-slate-300 flex items-center gap-2">
+        <Activity className="w-4 h-4 text-sky-400 shrink-0" />
+        <span>
+          {score > 0
+            ? `Calculated in real-time based on your active vs leisure browsing.`
+            : 'Start browsing to initiate score indexing.'}
+        </span>
       </div>
     </div>
   );

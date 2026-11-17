@@ -22,8 +22,8 @@ export const Dashboard: React.FC = () => {
   const service = useTimeTracking();
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
   
-  // Executive view controls (default to May 22, 2025 to match screenshot)
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(2025, 4, 22));
+  // Executive view controls
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedRange, setSelectedRange] = useState<ExecutiveRange>('Day');
   const [showDeepAnalytics, setShowDeepAnalytics] = useState<boolean>(true);
 
@@ -34,9 +34,10 @@ export const Dashboard: React.FC = () => {
   const scoreFactors = service.getScoreFactors();
   const insights = service.getInsights();
 
-  const total = summary.totalTime || 1;
-  const prodPct = Math.round((summary.productiveTime / total) * 100);
-  const distPct = Math.round((summary.distractingTime / total) * 100);
+  const total = summary.totalTime;
+  const prodPct = total > 0 ? Math.round((summary.productiveTime / total) * 100) : 0;
+  const distPct = total > 0 ? Math.round((summary.distractingTime / total) * 100) : 0;
+  const targetPercent = total > 0 ? Math.min(100, Math.round((total / 28800) * 100)) : 0;
 
   return (
     <div className="space-y-6 pb-12">
@@ -53,10 +54,10 @@ export const Dashboard: React.FC = () => {
 
       {/* 3. Row 1: KPI Cards (Work Hours, Percent of Target in Mint, Focus Percent) */}
       <ExecutiveKpiCards
-        workHoursFormatted="7hr 30min"
-        targetHoursFormatted="7hr 30min"
-        targetPercent={90}
-        focusPercent={80}
+        workHoursFormatted={formatDuration(summary.totalTime)}
+        targetHoursFormatted="8hr 00min"
+        targetPercent={targetPercent}
+        focusPercent={prodPct}
       />
 
       {/* 4. Row 2: Visual 6am–6pm Continuous Timeline */}
@@ -76,11 +77,11 @@ export const Dashboard: React.FC = () => {
               <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 Deep Analytics &amp; Browsing Telemetry
                 <span className="text-[11px] font-mono font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Full Dataset
+                  Live Telemetry
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                12-week GitHub-style heatmap, 24-hour activity curves, and domain productivity breakdown.
+                12-week calendar heatmap, 24-hour activity curves, and domain productivity breakdown.
               </p>
             </div>
           </div>
@@ -103,7 +104,7 @@ export const Dashboard: React.FC = () => {
                 id="stat-total-time"
                 title="Total Browsing Time"
                 value={formatDuration(summary.totalTime)}
-                subtitle="+12% vs yesterday"
+                subtitle={summary.totalTime > 0 ? `${summary.websitesVisited} websites active today` : 'No active sessions yet'}
                 icon={Clock}
                 iconColor="text-sky-400"
               />
@@ -134,11 +135,11 @@ export const Dashboard: React.FC = () => {
                 id="stat-productivity-score"
                 title="Productivity Score"
                 value={`${summary.productivityScore} / 100`}
-                subtitle="+6 points vs yesterday"
+                subtitle={summary.totalTime > 0 ? `${prodPct}% productive ratio` : 'Awaiting browsing activity'}
                 icon={Activity}
                 iconColor="text-emerald-400"
                 scoreCircle
-                statusBadge={summary.productivityScore >= 70 ? 'Good' : 'Moderate'}
+                statusBadge={summary.totalTime > 0 ? (summary.productivityScore >= 70 ? 'Good' : 'Moderate') : 'Ready'}
                 statusColor={
                   summary.productivityScore >= 70
                     ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
