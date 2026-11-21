@@ -11,7 +11,7 @@ if (!fs.existsSync(distDir)) {
   process.exit(1);
 }
 
-// Helper to recursively copy directory
+// Helper to recursively copy directory while excluding hidden dotfiles
 function copyDirSync(src, dest) {
   if (fs.existsSync(dest)) {
     fs.rmSync(dest, { recursive: true, force: true });
@@ -20,11 +20,16 @@ function copyDirSync(src, dest) {
   const entries = fs.readdirSync(src, { withFileTypes: true });
 
   for (const entry of entries) {
+    if (entry.name.startsWith('.')) continue;
+
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 
     if (entry.isDirectory()) {
       copyDirSync(srcPath, destPath);
+      if (fs.existsSync(destPath) && fs.readdirSync(destPath).length === 0) {
+        fs.rmdirSync(destPath);
+      }
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
@@ -39,6 +44,7 @@ const chromeFirefoxManifest = path.join(chromeDir, 'manifest.firefox.json');
 if (fs.existsSync(chromeFirefoxManifest)) {
   fs.unlinkSync(chromeFirefoxManifest);
 }
+JSON.parse(fs.readFileSync(path.join(chromeDir, 'manifest.json'), 'utf8'));
 console.log('  ✓ chrome-dist generated (Ready for Chrome, Edge, Brave, Arc)');
 
 // 2. Generate firefox-dist
@@ -49,6 +55,7 @@ if (fs.existsSync(firefoxCustomManifest)) {
   fs.copyFileSync(firefoxCustomManifest, firefoxManifestTarget);
   fs.unlinkSync(firefoxCustomManifest);
 }
+JSON.parse(fs.readFileSync(firefoxManifestTarget, 'utf8'));
 console.log('  ✓ firefox-dist generated (Ready for Firefox via about:debugging or web-ext)');
 
 console.log('\nDistributions successfully generated:');

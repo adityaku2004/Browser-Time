@@ -18,7 +18,8 @@
 - [Compiling the Extension](#-compiling-the-extension)
 - [Testing in Google Chrome & Chromium](#-testing-in-google-chrome--chromium)
 - [Testing in Mozilla Firefox](#-testing-in-mozilla-firefox)
-- [Extension Architecture & Architecture Guide](#-extension-architecture--migration-guide)
+- [Creating & Installing a Firefox `.xpi` Package](#-creating--installing-a-firefox-xpi-package)
+- [Extension Architecture & Migration Guide](#-extension-architecture--migration-guide)
 - [Project Directory Structure](#-project-directory-structure)
 - [Available npm Scripts](#-available-npm-scripts)
 - [Troubleshooting & FAQ](#-troubleshooting--faq)
@@ -189,7 +190,83 @@ npm run build
 # 2. Launch Firefox with web-ext targeting firefox-dist
 npx web-ext run --source-dir firefox-dist/
 ```
-`web-ext` launches a dedicated, sandboxed Firefox instance with the extension installed, featuring automatic reloads whenever files in `dist/` change.
+`web-ext` launches a dedicated, sandboxed Firefox instance with the extension installed, featuring automatic reloads whenever files in `firefox-dist/` change.
+
+---
+
+## 📦 Creating & Installing a Firefox `.xpi` Package
+
+Firefox `.xpi` files are standard ZIP archives whose root contains `manifest.json` (not wrapped inside an extra subfolder).
+
+### Step 1: Build and Validate the Firefox Bundle
+
+```bash
+# 1. Clean old artifacts and compile fresh chrome-dist/ and firefox-dist/
+npm run clean
+npm run build
+
+# 2. Validate against Mozilla Add-ons (AMO) linter rules
+npx addons-linter firefox-dist/
+```
+Verify that `manifest.json` inside `firefox-dist/` passes with `0 errors` (including `browser_specific_settings.gecko.data_collection_permissions: { "required": ["none"] }`).
+
+### Step 2: Create the `.xpi` File
+
+Choose **either** Mozilla's `web-ext` CLI (recommended) or a standard ZIP command:
+
+#### Option 1: Using `web-ext` (Recommended)
+```bash
+npx web-ext build --source-dir firefox-dist/ --artifacts-dir web-ext-artifacts/ --overwrite-dest
+```
+This outputs a `.zip` package inside `web-ext-artifacts/`. Rename it to `.xpi` if installing directly:
+```bash
+cp web-ext-artifacts/browser_time-1.0.0.zip web-ext-artifacts/browser-time-1.0.0.xpi
+```
+
+#### Option 2: Using `zip` (macOS / Linux)
+> **Important**: Run `zip` from **inside** `firefox-dist/` so `manifest.json` sits at the root of the `.xpi` archive.
+```bash
+cd firefox-dist
+zip -r ../browser-time-1.0.0.xpi .
+cd ..
+```
+
+#### Option 3: Using PowerShell (Windows)
+```powershell
+Compress-Archive -Path .\firefox-dist\* -DestinationPath .\browser-time.zip -Force
+Move-Item -Path .\browser-time.zip -Destination .\browser-time-1.0.0.xpi -Force
+```
+
+### Step 3: Sign `.xpi` for Standard Firefox Releases (AMO)
+
+Standard Firefox releases require add-ons to be signed by Mozilla before permanent installation:
+
+1. **Upload via AMO Developer Hub**:
+   - Zip the contents of `firefox-dist/` (or upload `browser-time-1.0.0.xpi` / `browser_time-1.0.0.zip`) at [addons.mozilla.org/developers](https://addons.mozilla.org/developers/).
+   - Submit for **Self-distribution** (unlisted signed `.xpi`) or **On this site** (public listing).
+   - Download the signed `.xpi` file once AMO finishes validation.
+2. **Or sign via CLI with `web-ext sign`**:
+   ```bash
+   npx web-ext sign \
+     --source-dir firefox-dist/ \
+     --artifacts-dir web-ext-artifacts/ \
+     --api-key "<AMO_JWT_ISSUER>" \
+     --api-secret "<AMO_JWT_SECRET>"
+   ```
+
+### Step 4: Install & Test the `.xpi` in Firefox
+
+1. **For a Signed `.xpi` (All Firefox editions)**:
+   - Open Firefox and press `Ctrl+O` (or `Cmd+O` on macOS), or drag and drop the `.xpi` file directly onto a Firefox tab.
+   - Or open `about:addons` → click the gear icon ⚙️ → **Install Add-on From File...** → select your `.xpi` file → click **Add**.
+2. **For an Unsigned `.xpi` (Local testing in Firefox Developer Edition / Nightly / ESR)**:
+   - Navigate to `about:config` in the address bar and accept the risk prompt.
+   - Search for `xpinstall.signatures.required` and toggle it to **`false`**.
+   - Open `about:addons` → gear icon ⚙️ → **Install Add-on From File...** → select `browser-time-1.0.0.xpi`.
+3. **Verify Tracking & Window-Close Behavior**:
+   - Click the **Browser Time** toolbar icon to inspect live tracking.
+   - Switch between tabs and verify active domain tracking updates.
+   - Close the browser window (`Alt+F4` / `Cmd+W` / close button) and verify tracking stops immediately without accruing phantom idle/closed time.
 
 ---
 
@@ -340,13 +417,13 @@ When connecting real browsing activity:
 
 | Script | Command | Purpose |
 |---|---|---|
-| `npm run dev` | `vite --port=3000 --host=0.0.0.0` | Starts local development server with hot reload |
-| `npm run build` | `vite build` | Compiles app into `dist/` configured for Chrome MV3 |
-| `npm run build:chrome` | `vite build` | Explicit alias for compiling Chrome extension |
-| `npm run build:firefox` | `vite build && cp dist/manifest.firefox.json dist/manifest.json` | Compiles app and configures `dist/` for Firefox |
+| `npm run dev` | `vite --port=3000 --host=0.0.0.0` | Starts local development server on port 3000 |
+| `npm run build` | `vite build && node scripts/build-extensions.js` | Compiles app and generates both `chrome-dist/` and `firefox-dist/` |
+| `npm run build:chrome` | `vite build && node scripts/build-extensions.js` | Alias to build `chrome-dist/` and `firefox-dist/` |
+| `npm run build:firefox` | `vite build && node scripts/build-extensions.js` | Alias to build `chrome-dist/` and `firefox-dist/` |
 | `npm run preview` | `vite preview` | Previews the compiled `dist/` web output locally |
 | `npm run lint` | `tsc --noEmit` | Runs TypeScript type checking |
-| `npm run clean` | `rm -rf dist` | Deletes the compiled `dist` folder |
+| `npm run clean` | `rm -rf dist chrome-dist firefox-dist server.js` | Deletes compiled output directories |
 
 ---
 

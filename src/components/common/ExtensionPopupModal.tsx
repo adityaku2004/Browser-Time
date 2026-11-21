@@ -2,7 +2,7 @@ import React from 'react';
 import { useTimeTracking } from '../../hooks/useTimeTracking';
 import { formatDuration, formatTimer } from '../../utils/formatters';
 import { Clock, Pause, Play, ShieldBan, ExternalLink, X, Activity, Globe } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../router/HashRouter';
 
 interface ExtensionPopupModalProps {
   isOpen: boolean;

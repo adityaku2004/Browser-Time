@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from '../../router/HashRouter';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { TrackingStatusModal } from '../common/TrackingStatusModal';

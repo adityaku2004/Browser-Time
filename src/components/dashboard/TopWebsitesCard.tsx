@@ -3,7 +3,7 @@ import { WebsiteActivity } from '../../types';
 import { formatDuration, getCategoryConfig } from '../../utils/formatters';
 import { Badge } from '../common/Badge';
 import { Globe, ExternalLink, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '../../router/HashRouter';
 
 interface TopWebsitesCardProps {
   websites: WebsiteActivity[];
